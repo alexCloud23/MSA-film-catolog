@@ -1,0 +1,258 @@
+{
+  "info": {
+    "name": "Cinema API — OpenFeign",
+    "description": "Запустите docker compose up --build -d. В Collection Runner выберите папку «Каталог работает». Сценарий 503 запускайте отдельно по инструкции внутри запроса.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "catalogClientUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "catalogApiUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "catalogFilmId",
+      "value": "1"
+    },
+    {
+      "key": "missingCatalogFilmId",
+      "value": "9223372036854775807"
+    }
+  ],
+  "item": [
+    {
+      "name": "Каталог работает",
+      "description": "Запускайте по порядку. Первый запрос берёт ID из списка, третий сравнивает карточку с прямым ответом MSA1.",
+      "item": [
+        {
+          "name": "Список фильмов через Feign",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.unset(\"catalogFilmResponse\");",
+                  "if (pm.response.code === 200) {",
+                  "    const films = pm.response.json();",
+                  "    pm.test(\"Список содержит фильм с ID\", () => {",
+                  "        pm.expect(films).to.be.an(\"array\").that.is.not.empty;",
+                  "        pm.expect(films[0].id).to.be.a(\"number\");",
+                  "    });",
+                  "    if (Array.isArray(films) && Number.isInteger(films[0]?.id)) {",
+                  "        pm.collectionVariables.set(\"catalogFilmId\", String(films[0].id));",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogClientUrl}}/catalog/films",
+              "host": [
+                "{{catalogClientUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "films"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Карточка фильма через Feign",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.unset(\"catalogFilmResponse\");",
+                  "if (pm.response.code === 200) {",
+                  "    const film = pm.response.json();",
+                  "    pm.test(\"Карточка запрошенного фильма\", () => {",
+                  "        pm.expect(String(film.id)).to.equal(pm.variables.get(\"catalogFilmId\"));",
+                  "    });",
+                  "    pm.collectionVariables.set(\"catalogFilmResponse\", JSON.stringify(film));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogClientUrl}}/catalog/films/{{catalogFilmId}}",
+              "host": [
+                "{{catalogClientUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "films",
+                "{{catalogFilmId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Карточка фильма напрямую из MSA1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Ответ совпадает с карточкой через Feign\", () => {",
+                  "        const feignResponse = pm.collectionVariables.get(\"catalogFilmResponse\");",
+                  "        pm.expect(feignResponse, \"Сначала запросите карточку через Feign\").to.be.a(\"string\");",
+                  "        pm.expect(pm.response.json()).to.deep.equal(JSON.parse(feignResponse));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogApiUrl}}/api/films/{{catalogFilmId}}",
+              "host": [
+                "{{catalogApiUrl}}"
+              ],
+              "path": [
+                "api",
+                "films",
+                "{{catalogFilmId}}"
+              ]
+            },
+            "description": "Выполните после запроса «Карточка фильма через Feign»."
+          },
+          "response": []
+        },
+        {
+          "name": "Список фильмов напрямую из MSA1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ответ содержит массив\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogApiUrl}}/api/films",
+              "host": [
+                "{{catalogApiUrl}}"
+              ],
+              "path": [
+                "api",
+                "films"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Отсутствующий фильм через Feign",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogClientUrl}}/catalog/films/{{missingCatalogFilmId}}",
+              "host": [
+                "{{catalogClientUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "films",
+                "{{missingCatalogFilmId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Каталог недоступен",
+      "item": [
+        {
+          "name": "Недоступный MSA1 через Feign",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const url = pm.variables.replaceIn('{{catalogApiUrl}}/api/films');",
+                  "const catalog = await pm.sendRequest(url).catch(() => null);",
+                  "if (catalog?.code === 200) {",
+                  "    console.info('Сценарий 503 пропущен. Остановите MSA1 командой docker compose stop app и повторите запрос.');",
+                  "    pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 503\", () => pm.response.to.have.status(503));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogClientUrl}}/catalog/films",
+              "host": [
+                "{{catalogClientUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "films"
+              ]
+            },
+            "description": "Postman пропускает запрос, пока MSA1 отвечает HTTP 200. Для проверки выполните `docker compose stop app`, оставив catalog-client запущенным. Отправьте запрос и проверьте HTTP 503. Затем восстановите MSA1 командой `docker compose start app`."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

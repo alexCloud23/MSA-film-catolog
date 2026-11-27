@@ -1,0 +1,567 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+		"name": "Cinema API",
+		"description": "CRUD Кинотеатр. Запускайте запросы СВЕРХУ ВНИЗ в каждом разделе: Create сохраняет ID в переменную, Update/Delete/Get используют {{filmId}} и {{reviewId}}. Коллекцию можно запускать повторно сколько угодно раз - slug генерируется уникальным через {{$timestamp}}.\n\nЗапуск в Docker: docker compose up --build, дождитесь в логах app строки Started Msa1Application, затем импортируйте environment Cinema Local и запускайте папки сверху вниз. Папку Negative tests можно запускать независимо - она проверяет 404 для несуществующих ресурсов и 400 при нарушении валидации.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "filmId",
+			"value": "1"
+		},
+		{
+			"key": "reviewId",
+			"value": "1"
+		}
+	],
+	"item": [
+		{
+			"name": "Films",
+			"item": [
+				{
+					"name": "1. Get All Films",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"List returned\", () => { const j = pm.response.json(); pm.expect(j).to.be.an(\"array\"); });"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/films",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "films"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Create Film",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.collectionVariables.set(\"filmId\", json.id);",
+									"console.log(\"Created film id=\" + json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Новый Фильм {{$timestamp}}\",\n    \"slug\": \"test-film-{{$timestamp}}\",\n    \"description\": \"Фильм, созданный через Postman\",\n    \"genre\": \"Drama\",\n    \"releaseYear\": 2024,\n    \"durationMinutes\": 120\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/films",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "films"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Get Film by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/films/{{filmId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "films", "{{filmId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Get Film by Slug",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/films/slug/the-room",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "films", "slug", "the-room"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5. Update Film",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Title updated\", () => pm.expect(pm.response.json().title).to.eql(\"Обновленный Фильм\"));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Обновленный Фильм\",\n    \"slug\": \"updated-film-{{$timestamp}}\",\n    \"description\": \"Обновленное описание через Postman\",\n    \"genre\": \"Action\",\n    \"releaseYear\": 2025,\n    \"durationMinutes\": 130\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/films/{{filmId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "films", "{{filmId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6. Delete Film",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/films/{{filmId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "films", "{{filmId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reviews",
+			"item": [
+				{
+					"name": "1. Get All Reviews",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"List returned\", () => { const j = pm.response.json(); pm.expect(j).to.be.an(\"array\"); });"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reviews"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Get Reviews by Film",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews/film/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reviews", "film", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Create Review",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.collectionVariables.set(\"reviewId\", json.id);",
+									"console.log(\"Created review id=\" + json.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"authorId\": 1,\n    \"rating\": 5,\n    \"text\": \"Отличный фильм! Создано через Postman.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews/film/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reviews", "film", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Get Review by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reviews", "{{reviewId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5. Update Review",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Rating updated\", () => pm.expect(pm.response.json().rating).to.eql(4));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 4,\n    \"text\": \"Хороший фильм, но можно было лучше. Обновлено через Postman.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reviews", "{{reviewId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6. Delete Review",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reviews", "{{reviewId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Negative tests",
+			"description": "Негативные проверки: 404 для несуществующих ресурсов, 400 при нарушении валидации DTO. Не зависит от остальных папок, можно запускать отдельно.",
+			"item": [
+				{
+					"name": "1. Get Film by ID - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+									"pm.test(\"ApiError body\", () => {",
+									"    const j = pm.response.json();",
+									"    pm.expect(j.status).to.eql(404);",
+									"    pm.expect(j.message).to.be.a(\"string\").and.not.be.empty;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/films/999999",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "films", "999999"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Get Film by Slug - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/films/slug/no-such-slug-{{$timestamp}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "films", "slug", "no-such-slug-{{$timestamp}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Create Film - Validation Failed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"Validation details mention fields\", () => {",
+									"    const j = pm.response.json();",
+									"    pm.expect(j.details).to.be.an(\"array\").that.is.not.empty;",
+									"    const d = j.details.join(\" \");",
+									"    pm.expect(d).to.include(\"title\");",
+									"    pm.expect(d).to.include(\"slug\");",
+									"    pm.expect(d).to.include(\"releaseYear\");",
+									"    pm.expect(d).to.include(\"durationMinutes\");",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"\",\n    \"slug\": \"\",\n    \"description\": \"Невалидный запрос\",\n    \"releaseYear\": 1500,\n    \"durationMinutes\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/films",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "films"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Create Review for Missing Film - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+									"pm.test(\"ApiError body\", () => {",
+									"    const j = pm.response.json();",
+									"    pm.expect(j.status).to.eql(404);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"authorId\": 1,\n    \"rating\": 5,\n    \"text\": \"Отзыв к несуществующему фильму\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews/film/999999",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reviews", "film", "999999"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5. Create Review - Invalid Rating",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+									"pm.test(\"Rating validation failed\", () => {",
+									"    const j = pm.response.json();",
+									"    pm.expect(j.details.join(\" \")).to.include(\"rating\");",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"authorId\": 1,\n    \"rating\": 7,\n    \"text\": \"Отзыв с некорректным рейтингом\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews/film/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reviews", "film", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6. Delete Film - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/films/999999",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "films", "999999"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

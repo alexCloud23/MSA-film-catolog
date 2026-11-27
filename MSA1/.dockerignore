@@ -1,0 +1,14 @@
+target/
+.idea/
+.settings/
+.git/
+.classpath
+.project
+.factorypath
+hs_err_pid*.log
+*.iml
+.mvn/
+mvnw
+mvnw.cmd
+postman_*.json
+logs/

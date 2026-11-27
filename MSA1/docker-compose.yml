@@ -1,0 +1,45 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: msa1-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Mysqlpassword23!
+      MYSQL_DATABASE: msa1_cinema
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build: .
+    container_name: msa1-app
+    restart: on-failure
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/msa1_cinema?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Mysqlpassword23!
+    ports:
+      - "8080:8080"
+
+  catalog-client:
+    build: ./catalog-client
+    depends_on:
+      - app
+    environment:
+      CATALOG_BASE_URL: "http://app:8080"
+    ports:
+      - "8081:8081"
+
+volumes:
+  mysql_data:
